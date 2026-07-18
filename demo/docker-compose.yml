@@ -1,7 +1,7 @@
 services:
-  demo-db:
+  demo-postgres:
     image: postgres:17-alpine
-    container_name: octoquery-demo-db
+    container_name: octoquery-demo-postgres
     environment:
       POSTGRES_DB: ecommerce
       POSTGRES_USER: octoquery
@@ -9,9 +9,27 @@ services:
     ports:
       - "45432:5432"
     volumes:
-      - ./init:/docker-entrypoint-initdb.d:ro
+      - ./init-postgres:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U octoquery -d ecommerce"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  demo-mysql:
+    image: mysql:8
+    container_name: octoquery-demo-mysql
+    environment:
+      MYSQL_DATABASE: blog
+      MYSQL_USER: octoquery
+      MYSQL_PASSWORD: octoquery
+      MYSQL_ROOT_PASSWORD: octoquery-root
+    ports:
+      - "43306:3306"
+    volumes:
+      - ./init-mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

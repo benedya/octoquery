@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help run r dev build lint lint-fix mcp-inspector i demo-up demo-down demo-psql
+.PHONY: help run r dev build lint lint-fix mcp-inspector i demo-up demo-down demo-psql demo-mysql
 SHELL := /bin/bash
 
 COLOR_OFF=\033[0m
@@ -32,11 +32,14 @@ mcp-inspector: ## [i] Run MCP Inspector
 	npx @modelcontextprotocol/inspector
 i: mcp-inspector
 
-demo-up: ## Start the demo e-commerce database (Docker Compose)
+demo-up: ## Start the demo databases (Docker Compose)
 	docker compose -f demo/docker-compose.yml up -d --wait
 
-demo-down: ## Stop the demo database and delete its data
+demo-down: ## Stop the demo databases and delete their data
 	docker compose -f demo/docker-compose.yml down -v
 
-demo-psql: ## Open a psql shell into the demo database
-	docker exec -it octoquery-demo-db psql -U octoquery -d ecommerce
+demo-psql: ## Open a psql shell into the demo e-commerce database (PostgreSQL)
+	docker exec -it octoquery-demo-postgres psql -U octoquery -d ecommerce
+
+demo-mysql: ## Open a mysql shell into the demo blog database (MySQL)
+	docker exec -it octoquery-demo-mysql mysql -uoctoquery -poctoquery blog

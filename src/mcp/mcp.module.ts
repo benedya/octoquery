@@ -7,19 +7,37 @@ import { createLazyDataSource } from './database/lazy-data-source'
 import { MCP_TOOL_HANDLERS } from './mcp.constants'
 import { McpController } from './mcp.controller'
 import { McpServerService } from './mcp-server.service'
-import { SqlToolHandler } from './tools/sql-tool.handler'
+import { MysqlToolHandler } from './tools/mysql-tool.handler'
+import { PostgresToolHandler } from './tools/postgres-tool.handler'
+import type { SqlToolHandler } from './tools/sql-tool.handler'
+import type { SqlToolHandlerOptions } from './types/sql-tool-handler-options'
 
-const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => ({
-  type: 'postgres',
-  host: tool.host,
-  port: tool.port,
-  database: tool.database,
-  username: tool.user,
-  password: tool.password,
-  ssl: tool.enableTLS && {
-    rejectUnauthorized: false,
-  },
-})
+const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => {
+  const common = {
+    host: tool.host,
+    database: tool.database,
+    username: tool.user,
+    password: tool.password,
+  }
+
+  if (tool.type === 'mysql') {
+    return {
+      type: 'mysql',
+      ...common,
+      port: tool.port ?? 3306,
+      ssl: tool.enableTLS ? { rejectUnauthorized: false } : undefined,
+    }
+  }
+
+  return {
+    type: 'postgres',
+    ...common,
+    port: tool.port ?? 5432,
+    ssl: tool.enableTLS && {
+      rejectUnauthorized: false,
+    },
+  }
+}
 
 @Module({
   imports: [AuthModule],
@@ -34,17 +52,20 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => ({
         const readOnly = configService.getOrThrow<boolean>('mcp.readOnly')
         const tools = configService.getOrThrow<SqlToolConfig[]>('mcp.tools')
 
-        return tools.map(
-          (tool) =>
-            new SqlToolHandler({
-              name: tool.name,
-              databaseLabel: tool.label ?? tool.name,
-              description: tool.description,
-              maxRows: tool.maxRows ?? defaultMaxRows,
-              readOnly,
-              getDataSource: createLazyDataSource(toDataSourceOptions(tool)),
-            }),
-        )
+        return tools.map((tool) => {
+          const options: SqlToolHandlerOptions = {
+            name: tool.name,
+            databaseLabel: tool.label ?? tool.name,
+            description: tool.description,
+            maxRows: tool.maxRows ?? defaultMaxRows,
+            readOnly,
+            getDataSource: createLazyDataSource(toDataSourceOptions(tool)),
+          }
+
+          return tool.type === 'mysql'
+            ? new MysqlToolHandler(options)
+            : new PostgresToolHandler(options)
+        })
       },
     },
   ],

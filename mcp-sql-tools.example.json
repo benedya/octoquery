@@ -9,5 +9,17 @@
     "user": "octoquery",
     "password": "octoquery",
     "enableTLS": false
+  },
+  {
+    "name": "sql_blog_demo",
+    "type": "mysql",
+    "label": "demo blog",
+    "description": "Demo blog database (authors, posts, comments). Started via demo/docker-compose.yml.",
+    "host": "127.0.0.1",
+    "port": 43306,
+    "database": "blog",
+    "user": "octoquery",
+    "password": "octoquery",
+    "enableTLS": false
   }
 ]

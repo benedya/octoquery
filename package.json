@@ -23,6 +23,7 @@
     "@nestjs/platform-express": "^11.1.24",
     "dotenv": "^17.2.0",
     "jose": "^6.0.0",
+    "mysql2": "^3.23.0",
     "nestjs-pino": "^4.6.1",
     "pg": "^8.21.0",
     "pino-http": "^10.5.0",

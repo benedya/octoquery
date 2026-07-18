@@ -8,18 +8,24 @@ import type { McpToolResponse } from '../types/mcp-tool-response'
 import type { SqlToolHandlerOptions } from '../types/sql-tool-handler-options'
 import type { McpToolHandlerInterface } from './mcp-tool-handler.interface'
 
-export class SqlToolHandler implements McpToolHandlerInterface {
+// Engine-agnostic SQL tool: parameter validation, lazy connection, read-only
+// enforcement, row truncation, and error shaping. Engine-specific behavior
+// lives in the subclasses (one per supported database).
+export abstract class SqlToolHandler implements McpToolHandlerInterface {
   readonly name: string
   readonly definition: McpToolDefinition
 
   private readonly logger: Logger
 
-  constructor(private readonly options: SqlToolHandlerOptions) {
+  protected constructor(
+    private readonly options: SqlToolHandlerOptions,
+    databaseProductName: string,
+  ) {
     this.name = options.name
     this.definition = {
       description:
         options.description ??
-        `Execute a SQL query against the ${options.databaseLabel} PostgreSQL database. Returns query results as JSON. ${
+        `Execute a SQL query against the ${options.databaseLabel} ${databaseProductName} database. Returns query results as JSON. ${
           options.readOnly
             ? 'Only read queries are allowed: each query runs as a single statement in a read-only transaction, so statements that modify data are rejected.'
             : 'Caller is fully trusted — any SQL statement is accepted.'
@@ -32,8 +38,14 @@ export class SqlToolHandler implements McpToolHandlerInterface {
         readOnlyHint: options.readOnly,
       },
     }
-    this.logger = new Logger(`${SqlToolHandler.name}:${options.name}`)
+    this.logger = new Logger(`${new.target.name}:${options.name}`)
   }
+
+  // Engine-specific guard for read-only mode, called before the query runs.
+  // Throws when the statement cannot be safely executed in a READ ONLY
+  // transaction on this engine; implementations that fully trust the
+  // engine's transaction semantics may accept everything.
+  protected abstract assertReadOnlyQueryAllowed(query: string): void
 
   async execute(params: unknown): Promise<McpToolResponse> {
     const query =
@@ -78,8 +90,9 @@ export class SqlToolHandler implements McpToolHandlerInterface {
   }
 
   // Runs the query inside a READ ONLY transaction so the database itself
-  // rejects writes and DDL. Multi-statement queries are refused up front —
-  // see isMultiStatement for why the transaction alone is not enough.
+  // rejects writes. Multi-statement queries are refused up front — see
+  // isMultiStatement for why the transaction alone is not enough. Engines
+  // add their own restrictions via assertReadOnlyQueryAllowed.
   private async executeReadOnly(
     dataSource: DataSource,
     query: string,
@@ -90,22 +103,27 @@ export class SqlToolHandler implements McpToolHandlerInterface {
       )
     }
 
+    this.assertReadOnlyQueryAllowed(query)
+
     const queryRunner = dataSource.createQueryRunner()
 
     try {
       await queryRunner.connect()
-      await queryRunner.startTransaction()
-      await queryRunner.query('SET TRANSACTION READ ONLY')
-      const result: unknown = await queryRunner.query(query)
-      await queryRunner.commitTransaction()
+      // Supported by both PostgreSQL and MySQL. MySQL rejects changing the
+      // characteristics of an already-open transaction, so the mode has to be
+      // part of the statement that starts it.
+      await queryRunner.query('START TRANSACTION READ ONLY')
 
-      return result
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction().catch(() => undefined)
+      try {
+        const result: unknown = await queryRunner.query(query)
+        await queryRunner.query('COMMIT')
+
+        return result
+      } catch (error) {
+        await queryRunner.query('ROLLBACK').catch(() => undefined)
+
+        throw error
       }
-
-      throw error
     } finally {
       await queryRunner.release()
     }
