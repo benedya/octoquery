@@ -11,6 +11,7 @@
     "baseUrl": "./",
     "incremental": true,
     "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
     "allowJs": true
   }
 }

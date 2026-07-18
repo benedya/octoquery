@@ -104,6 +104,16 @@ Per entry: `name`, `host`, `database`, `user`, `password` are required; optional
 
 To give agents real understanding of a database, add a skill next to the demo one: create `.agents/skills/<your-db>/SKILL.md` describing the schema, relations, and conventions (use [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md) as the pattern), and list it in [AGENTS.md](AGENTS.md).
 
+## Tests
+
+Integration tests run with Jest and [Testcontainers](https://node.testcontainers.org/) — each suite starts a disposable PostgreSQL or MySQL container, so Docker must be running:
+
+```bash
+npm test
+```
+
+There is one full-stack suite per supported database (`npm run test:postgres`, `npm run test:mysql`): each boots the application against a real database container and drives the MCP endpoint over Streamable HTTP like a real client — covering tool discovery, query execution, read-only enforcement, multi-statement rejection, and row truncation.
+
 ## Testing with MCP Inspector
 
 The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is a web UI for exercising an MCP server by hand — the quickest way to verify your setup before involving an agent:

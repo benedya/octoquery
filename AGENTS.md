@@ -12,6 +12,7 @@ OctoQuery is a NestJS service exposing an MCP (Model Context Protocol) server ov
 ## Commands
 
 - `make run` — start the service in watch mode (`make help` lists all targets)
+- `make test` — integration tests (Jest + Testcontainers; requires Docker)
 - `make lint` / `make lint-fix` — Biome + TypeScript checks
 - `make demo-up` / `make demo-down` — start/stop the demo databases
 - `make demo-psql` — psql shell into the demo e-commerce database (PostgreSQL)

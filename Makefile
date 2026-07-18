@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help run r dev build lint lint-fix mcp-inspector i demo-up demo-down demo-psql demo-mysql
+.PHONY: help run r dev build test lint lint-fix mcp-inspector i demo-up demo-down demo-psql demo-mysql
 SHELL := /bin/bash
 
 COLOR_OFF=\033[0m
@@ -20,6 +20,9 @@ dev: run
 build: ## Build the service
 	@printf "${COLOR_WARNING}Building service...${COLOR_OFF}\n"
 	npm run build
+
+test: ## Run integration tests (requires Docker for Testcontainers)
+	npm test
 
 lint: ## Lint and typecheck
 	npm run lint
