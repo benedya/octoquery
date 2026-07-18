@@ -1,0 +1,1 @@
+export const MCP_TOOL_HANDLERS = Symbol('MCP_TOOL_HANDLERS')

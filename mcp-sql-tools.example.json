@@ -1,0 +1,13 @@
+[
+  {
+    "name": "sql_ecommerce_demo",
+    "label": "demo e-commerce",
+    "description": "Demo e-commerce database (users, products, orders, order_items). Started via demo/docker-compose.yml.",
+    "host": "127.0.0.1",
+    "port": 45432,
+    "database": "ecommerce",
+    "user": "octoquery",
+    "password": "octoquery",
+    "enableTLS": false
+  }
+]

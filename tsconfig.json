@@ -1,0 +1,16 @@
+{
+  "extends": "./node_modules/@tsconfig/node24/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowJs": true
+  }
+}

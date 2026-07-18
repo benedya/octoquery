@@ -1,0 +1,17 @@
+services:
+  demo-db:
+    image: postgres:17-alpine
+    container_name: octoquery-demo-db
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: octoquery
+      POSTGRES_PASSWORD: octoquery
+    ports:
+      - "45432:5432"
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U octoquery -d ecommerce"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
