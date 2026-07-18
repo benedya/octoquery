@@ -23,20 +23,35 @@ More engines may be added over time — contributions are welcome.
 
 ## Quick start (with the demo database)
 
-The fastest way to see it working — a seeded e-commerce database (users, products, orders, order items) runs in Docker:
+The fastest way to see it working — a seeded e-commerce database (users, products, orders, order items) runs in Docker.
+
+1. Clone the repository:
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/benedya/octoquery.git && cd octoquery
+```
+
+2. Install dependencies:
+
+```bash
 npm install
+```
 
-# 2. Start the demo PostgreSQL (127.0.0.1:45432, seeded automatically)
+3. Start the demo PostgreSQL (`127.0.0.1:45432`, seeded automatically):
+
+```bash
 docker compose -f demo/docker-compose.yml up -d
+```
 
-# 3. Configure the service
-cp .env.example .env                              # set MCP_AUTH_ENABLED=false for a tokenless start
-cp mcp-sql-tools.example.json mcp-sql-tools.json  # first entry already points at the demo DB
+4. Configure the service — set `MCP_AUTH_ENABLED=false` in `.env` for a tokenless start; the first entry of `mcp-sql-tools.json` already points at the demo database:
 
-# 4. Run it
+```bash
+cp .env.example .env && cp mcp-sql-tools.example.json mcp-sql-tools.json
+```
+
+5. Run it:
+
+```bash
 npm run start:dev
 ```
 
