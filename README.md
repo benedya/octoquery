@@ -9,6 +9,8 @@ AI agents are great at writing SQL, but they need two things to be useful with *
 1. **Access** — a safe, standard way to run queries. OctoQuery provides that: each configured database is exposed as a single MCP tool (e.g. `sql_orders_prod`, `sql_analytics_dev`) that accepts a `query` string and returns rows as JSON. Adding a database is one JSON entry — no code.
 2. **Understanding** — knowledge of your schema, relations, and conventions. For that, you pair each database tool with an **agent skill**: a markdown file describing the tables, how they join, and what the gotchas are (money in cents, soft deletes, statuses to exclude, ...). With a skill, the agent reasons about your database efficiently instead of guessing at the schema query by query.
 
+![How OctoQuery works](docs/how-it-works.png)
+
 This repo ships working examples of both: two demo databases ([demo/](demo/docker-compose.yml) — an e-commerce PostgreSQL and a blog MySQL) with their matching skills ([ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md), [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md)), wired together through [AGENTS.md](AGENTS.md). Use them as the template for your own databases.
 
 Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`, protected by OAuth 2.0 (optional for local use). Connections are opened lazily on first query, so databases don't need to be reachable at startup.
