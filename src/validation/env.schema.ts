@@ -9,6 +9,7 @@ export const envValidationSchema = z
       .enum(['trace', 'debug', 'info', 'warn', 'error'])
       .default('info'),
     MCP_MAX_ROWS: z.coerce.number().int().positive().default(100),
+    MCP_READ_ONLY: z.enum(['true', 'false']).optional(),
     MCP_SQL_TOOLS_FILE: z.string().optional(),
     MCP_AUTH_ENABLED: z.enum(['true', 'false']).optional(),
     AUTH_ISSUER: z.url().optional(),

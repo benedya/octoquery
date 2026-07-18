@@ -31,6 +31,7 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => ({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): SqlToolHandler[] => {
         const defaultMaxRows = configService.getOrThrow<number>('mcp.maxRows')
+        const readOnly = configService.getOrThrow<boolean>('mcp.readOnly')
         const tools = configService.getOrThrow<SqlToolConfig[]>('mcp.tools')
 
         return tools.map(
@@ -40,6 +41,7 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => ({
               databaseLabel: tool.label ?? tool.name,
               description: tool.description,
               maxRows: tool.maxRows ?? defaultMaxRows,
+              readOnly,
               getDataSource: createLazyDataSource(toDataSourceOptions(tool)),
             }),
         )

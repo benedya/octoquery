@@ -113,4 +113,9 @@ For local development set `MCP_AUTH_ENABLED=false` — all auth env vars become 
 
 - **Sessions are in-memory** (map of `mcp-session-id` → transport). When running more than one replica, use sticky sessions at the ingress.
 - **`BASE_URL`** must be the public URL clients see (behind a proxy this differs from `localhost:<port>`); it is used in the resource metadata and `WWW-Authenticate` challenges.
-- The SQL tools execute arbitrary SQL — the caller is fully trusted. Access control is entirely provider-side, so a token grant should be treated as a database access grant. Use read-only database users where possible.
+- **Read-only by default.** With `MCP_READ_ONLY=true` (the default) every query runs as a single statement inside a `READ ONLY` transaction, so the database itself rejects writes and DDL. Set `MCP_READ_ONLY=false` to allow data modification.
+- With read-only mode disabled the SQL tools execute arbitrary SQL — the caller is fully trusted. Access control is entirely provider-side, so a token grant should be treated as a database access grant. Read-only database users are still the strongest guarantee.
+
+## License
+
+[MIT](LICENSE)

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "MCP server exposing each configured database as a SQL tool, protected by OAuth 2.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22"
   },

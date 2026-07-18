@@ -8,6 +8,7 @@ export interface AppConfig {
   }
   mcp: {
     maxRows: number
+    readOnly: boolean
     tools: SqlToolConfig[]
   }
   auth: {

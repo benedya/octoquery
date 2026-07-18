@@ -5,5 +5,6 @@ export interface SqlToolHandlerOptions {
   databaseLabel: string
   description?: string
   maxRows: number
+  readOnly: boolean
   getDataSource: () => Promise<DataSource>
 }

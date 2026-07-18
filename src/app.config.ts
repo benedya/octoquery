@@ -49,6 +49,7 @@ export const appConfig = (): AppConfig => ({
   },
   mcp: {
     maxRows: Number.parseInt(env.MCP_MAX_ROWS ?? '100', 10),
+    readOnly: env.MCP_READ_ONLY !== 'false',
     tools: loadSqlToolsConfig(),
   },
   auth: {
