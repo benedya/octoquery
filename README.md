@@ -104,6 +104,17 @@ Per entry: `name`, `host`, `database`, `user`, `password` are required; optional
 
 To give agents real understanding of a database, add a skill next to the demo one: create `.agents/skills/<your-db>/SKILL.md` describing the schema, relations, and conventions (use [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md) as the pattern), and list it in [AGENTS.md](AGENTS.md).
 
+## Authentication
+
+The service is an **OAuth 2.0 resource server** per the [MCP authorization spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization). It works with any OIDC provider (Auth0, Okta, ...) — configured via `AUTH_ISSUER` and `AUTH_AUDIENCE`:
+
+1. Unauthenticated requests to `/mcp` get `401` with a `WWW-Authenticate: Bearer resource_metadata="..."` header.
+2. The client fetches the RFC 9728 metadata (`GET /.well-known/oauth-protected-resource`), which points at the provider (`authorization_servers: [AUTH_ISSUER]`).
+3. The client obtains an access token from the provider (authorization code + PKCE for interactive clients, client credentials for machine-to-machine).
+4. The service validates the JWT against the provider's JWKS: signature (RS256), `iss`, `exp`, and — if `AUTH_AUDIENCE` is set — `aud`.
+
+For local development set `MCP_AUTH_ENABLED=false` — all auth env vars become optional.
+
 ## Tests
 
 Integration tests run with Jest and [Testcontainers](https://node.testcontainers.org/) — each suite starts a disposable PostgreSQL or MySQL container, so Docker must be running:
@@ -123,17 +134,6 @@ npx @modelcontextprotocol/inspector
 ```
 
 In the Inspector: select transport **Streamable HTTP**, set the URL to `http://localhost:3000/mcp`, and connect (with auth enabled, paste a bearer token in the Authentication field; with `MCP_AUTH_ENABLED=false` just connect). Under **Tools** you'll see one tool per configured database — run `sql_ecommerce_demo` with a query like `SELECT count(*) FROM orders` and inspect the JSON rows that an agent would receive. Results are truncated to the tool's `maxRows`.
-
-## Authentication
-
-The service is an **OAuth 2.0 resource server** per the [MCP authorization spec](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization). It works with any OIDC provider (Auth0, Okta, ...) — configured via `AUTH_ISSUER` and `AUTH_AUDIENCE`:
-
-1. Unauthenticated requests to `/mcp` get `401` with a `WWW-Authenticate: Bearer resource_metadata="..."` header.
-2. The client fetches the RFC 9728 metadata (`GET /.well-known/oauth-protected-resource`), which points at the provider (`authorization_servers: [AUTH_ISSUER]`).
-3. The client obtains an access token from the provider (authorization code + PKCE for interactive clients, client credentials for machine-to-machine).
-4. The service validates the JWT against the provider's JWKS: signature (RS256), `iss`, `exp`, and — if `AUTH_AUDIENCE` is set — `aud`.
-
-For local development set `MCP_AUTH_ENABLED=false` — all auth env vars become optional.
 
 ## Operational notes
 
