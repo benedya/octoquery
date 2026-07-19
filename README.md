@@ -25,9 +25,13 @@ Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`
 
 More engines may be added over time — contributions are welcome.
 
-## Quick start (with the demo database)
+## Quick start
 
-The fastest way to see it working — three seeded demo databases run in Docker: an e-commerce PostgreSQL (users, products, orders, order items), a blog MySQL (authors, posts, comments), and a library MariaDB (books, members, loans).
+From clone to asking your data questions in three steps: **run the server** (backed by seeded demo databases), **connect your AI agent**, and **try the demo prompts**.
+
+### Step 1 — Run the server with the demo databases
+
+Three seeded demo databases run in Docker: an e-commerce PostgreSQL (users, products, orders, order items), a blog MySQL (authors, posts, comments), and a library MariaDB (books, members, loans).
 
 1. Clone the repository:
 
@@ -59,11 +63,10 @@ cp .env.example .env && cp mcp-sql-tools.example.json mcp-sql-tools.json
 npm run start:dev
 ```
 
-The MCP endpoint is now live at `http://localhost:3000/mcp` with three tools: `sql_ecommerce_demo`, `sql_blog_demo`, and `sql_library_demo`. Connect an agent (next section) and ask things like *"top customers by spend"*, *"which blog post got the most comments?"*, or *"who has overdue library books?"*.
+The MCP endpoint is now live at `http://localhost:3000/mcp` with three tools: `sql_ecommerce_demo`, `sql_blog_demo`, and `sql_library_demo`.
 
-To stop the demo databases and delete their data: `docker compose -f demo/docker-compose.yml down -v`.
 
-## Connecting AI agents
+### Step 2 — Connect your AI agent
 
 The server speaks standard MCP over Streamable HTTP, so any MCP client works — Claude Code, Claude Desktop, VS Code, JetBrains IDEs, or anything else that understands MCP. With auth disabled (local dev) no token is needed; otherwise clients go through the OAuth flow described below.
 
@@ -82,7 +85,15 @@ The server speaks standard MCP over Streamable HTTP, so any MCP client works —
 
 **Give the agent the skills.** Point your agent at the skills in `.agents/skills/` — most agents pick them up through the project's [AGENTS.md](AGENTS.md), others discover a skills directory on their own. The skill is what turns a generic SQL tool into an agent that knows *your* schema.
 
-**Then just ask.** A typical interaction looks like this: you ask *"who are our top customers?"* — the agent reads the database's skill to learn the tables, how they join, and which rows to exclude, writes the SQL itself, and calls the matching `sql_*` tool to execute it. You get the answer; the skill made sure the query was right on the first try.
+### Step 3 — Try the demo
+
+Everything here works out of the box with this repository's stock configuration: the three seeded databases from step 1 and the tool entries shipped in [mcp-sql-tools.example.json](mcp-sql-tools.example.json). Try these prompts — the agent picks the right tool and skill on its own:
+
+| Example prompt                                       | Tool (database)                   | Skill                                                            |
+| ---------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| *"Who are our top 5 customers by total spend?"*      | `sql_ecommerce_demo` (PostgreSQL) | [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md)   |
+| *"Which blog post got the most comments?"*           | `sql_blog_demo` (MySQL)           | [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md)             |
+| *"Who has overdue library books, and which titles?"* | `sql_library_demo` (MariaDB)      | [library-demo-db](.agents/skills/library-demo-db/SKILL.md)       |
 
 ## Adding your own databases
 
