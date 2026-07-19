@@ -3,8 +3,8 @@ import type { SqlToolHandlerOptions } from '../types/sql-tool-handler-options'
 import { SqlToolHandler } from './sql-tool.handler'
 
 export class MysqlToolHandler extends SqlToolHandler {
-  constructor(options: SqlToolHandlerOptions) {
-    super(options, 'MySQL')
+  constructor(options: SqlToolHandlerOptions, databaseProductName = 'MySQL') {
+    super(options, databaseProductName)
   }
 
   // MySQL READ ONLY transactions block DML but not DDL: DDL statements

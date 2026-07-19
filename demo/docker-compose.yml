@@ -33,3 +33,21 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+
+  demo-mariadb:
+    image: mariadb:11
+    container_name: octoquery-demo-mariadb
+    environment:
+      MARIADB_DATABASE: library
+      MARIADB_USER: octoquery
+      MARIADB_PASSWORD: octoquery
+      MARIADB_ROOT_PASSWORD: octoquery-root
+    ports:
+      - "43307:3306"
+    volumes:
+      - ./init-mariadb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 20

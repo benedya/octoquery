@@ -21,5 +21,17 @@
     "user": "octoquery",
     "password": "octoquery",
     "enableTLS": false
+  },
+  {
+    "name": "sql_library_demo",
+    "type": "mariadb",
+    "label": "demo library",
+    "description": "Demo library database (books, members, loans). Started via demo/docker-compose.yml.",
+    "host": "127.0.0.1",
+    "port": 43307,
+    "database": "library",
+    "user": "octoquery",
+    "password": "octoquery",
+    "enableTLS": false
   }
 ]

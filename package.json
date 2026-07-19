@@ -15,6 +15,7 @@
     "test": "jest",
     "test:postgres": "jest mcp-postgres",
     "test:mysql": "jest mcp-mysql",
+    "test:mariadb": "jest mcp-mariadb",
     "lint": "biome check && tsc --noEmit",
     "lint:fix": "biome check --write",
     "prepare": "husky"
@@ -41,6 +42,7 @@
     "@nestjs/cli": "^11.0.21",
     "@nestjs/schematics": "^11.1.0",
     "@nestjs/testing": "^11.1.28",
+    "@testcontainers/mariadb": "^12.0.4",
     "@testcontainers/mysql": "^12.0.4",
     "@testcontainers/postgresql": "^12.0.4",
     "@tsconfig/node24": "^24.0.4",

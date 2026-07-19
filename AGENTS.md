@@ -7,7 +7,7 @@ OctoQuery is a NestJS service exposing an MCP (Model Context Protocol) server ov
 - `src/mcp/` — MCP controller, server service, SQL tool handler, lazy database connections
 - `src/auth/` — OAuth 2.0 resource-server guard and RFC 9728 metadata endpoint
 - `mcp-sql-tools.example.json` — template for the (gitignored) `mcp-sql-tools.json` tool configuration
-- `demo/` — Docker Compose playground: a seeded e-commerce PostgreSQL database and a seeded blog MySQL database
+- `demo/` — Docker Compose playground: seeded demo databases — e-commerce (PostgreSQL), blog (MySQL), and library (MariaDB)
 
 ## Commands
 
@@ -17,6 +17,7 @@ OctoQuery is a NestJS service exposing an MCP (Model Context Protocol) server ov
 - `make demo-up` / `make demo-down` — start/stop the demo databases
 - `make demo-psql` — psql shell into the demo e-commerce database (PostgreSQL)
 - `make demo-mysql` — mysql shell into the demo blog database (MySQL)
+- `make demo-mariadb` — mariadb shell into the demo library database (MariaDB)
 - `make mcp-inspector` — MCP Inspector for manual testing
 
 ## Available skills
@@ -25,3 +26,4 @@ Skills live in `.agents/skills/`:
 
 - **ecommerce-demo-db** (`.agents/skills/ecommerce-demo-db/SKILL.md`) — how to query the demo e-commerce database (users, products, orders, order_items) through the `sql_ecommerce_demo` MCP tool, including its schema and conventions. Use it for any question about the demo shop's users, products, orders, or revenue.
 - **blog-demo-db** (`.agents/skills/blog-demo-db/SKILL.md`) — how to query the demo blog database (authors, posts, comments) through the `sql_blog_demo` MCP tool, including its schema and conventions. Use it for any question about the demo blog's authors, posts, comments, or views.
+- **library-demo-db** (`.agents/skills/library-demo-db/SKILL.md`) — how to query the demo library database (books, members, loans) through the `sql_library_demo` MCP tool, including its schema and conventions. Use it for any question about the demo library's books, members, loans, or overdue returns.

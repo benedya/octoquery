@@ -11,7 +11,7 @@ AI agents are great at writing SQL, but they need two things to be useful with *
 
 ![How OctoQuery works](docs/how-it-works.png)
 
-This repo ships working examples of both: two demo databases ([demo/](demo/docker-compose.yml) — an e-commerce PostgreSQL and a blog MySQL) with their matching skills ([ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md), [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md)), wired together through [AGENTS.md](AGENTS.md). Use them as the template for your own databases.
+This repo ships working examples of both: three demo databases ([demo/](demo/docker-compose.yml) — an e-commerce PostgreSQL, a blog MySQL, and a library MariaDB) with their matching skills ([ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md), [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md), [library-demo-db](.agents/skills/library-demo-db/SKILL.md)), wired together through [AGENTS.md](AGENTS.md). Use them as the template for your own databases.
 
 Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`, protected by OAuth 2.0 (optional for local use). Connections are opened lazily on first query, so databases don't need to be reachable at startup.
 
@@ -21,12 +21,13 @@ Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`
 | ---------- | ------------ |
 | PostgreSQL | ✅ Supported |
 | MySQL      | ✅ Supported |
+| MariaDB    | ✅ Supported |
 
 More engines may be added over time — contributions are welcome.
 
 ## Quick start (with the demo database)
 
-The fastest way to see it working — two seeded demo databases run in Docker: an e-commerce PostgreSQL (users, products, orders, order items) and a blog MySQL (authors, posts, comments).
+The fastest way to see it working — three seeded demo databases run in Docker: an e-commerce PostgreSQL (users, products, orders, order items), a blog MySQL (authors, posts, comments), and a library MariaDB (books, members, loans).
 
 1. Clone the repository:
 
@@ -40,13 +41,13 @@ git clone https://github.com/benedya/octoquery.git && cd octoquery
 npm install
 ```
 
-3. Start the demo databases (PostgreSQL on `127.0.0.1:45432`, MySQL on `127.0.0.1:43306`, both seeded automatically):
+3. Start the demo databases (PostgreSQL on `127.0.0.1:45432`, MySQL on `127.0.0.1:43306`, MariaDB on `127.0.0.1:43307`, all seeded automatically):
 
 ```bash
 docker compose -f demo/docker-compose.yml up -d
 ```
 
-4. Configure the service — set `MCP_AUTH_ENABLED=false` in `.env` for a tokenless start; `mcp-sql-tools.json` already points at both demo databases:
+4. Configure the service — set `MCP_AUTH_ENABLED=false` in `.env` for a tokenless start; `mcp-sql-tools.json` already points at all demo databases:
 
 ```bash
 cp .env.example .env && cp mcp-sql-tools.example.json mcp-sql-tools.json
@@ -58,7 +59,7 @@ cp .env.example .env && cp mcp-sql-tools.example.json mcp-sql-tools.json
 npm run start:dev
 ```
 
-The MCP endpoint is now live at `http://localhost:3000/mcp` with two tools, `sql_ecommerce_demo` and `sql_blog_demo`. Connect an agent (next section) and ask things like *"top customers by spend"* or *"which blog post got the most comments?"*.
+The MCP endpoint is now live at `http://localhost:3000/mcp` with three tools: `sql_ecommerce_demo`, `sql_blog_demo`, and `sql_library_demo`. Connect an agent (next section) and ask things like *"top customers by spend"*, *"which blog post got the most comments?"*, or *"who has overdue library books?"*.
 
 To stop the demo databases and delete their data: `docker compose -f demo/docker-compose.yml down -v`.
 
@@ -102,7 +103,7 @@ Databases are defined entirely in `mcp-sql-tools.json` (gitignored — it holds 
 ]
 ```
 
-Per entry: `name`, `host`, `database`, `user`, `password` are required; optional are `type` (`postgres`, the default, or `mysql`), `label` (used in the tool title, defaults to the name), `description` (full tool-description override), `port` (defaults to the engine's standard port: 5432 for postgres, 3306 for mysql), `enableTLS` (default true), and `maxRows` (default `MCP_MAX_ROWS`, 100). Tool names are free-form, so any environment/database combination works — one entry per tool. Duplicate names, malformed JSON, or a missing file fail validation at startup. Set `MCP_SQL_TOOLS_FILE` to load the file from a different path (e.g. a mounted secret in Kubernetes).
+Per entry: `name`, `host`, `database`, `user`, `password` are required; optional are `type` (`postgres`, the default, `mysql`, or `mariadb`), `label` (used in the tool title, defaults to the name), `description` (full tool-description override), `port` (defaults to the engine's standard port: 5432 for postgres, 3306 for mysql/mariadb), `enableTLS` (default true), and `maxRows` (default `MCP_MAX_ROWS`, 100). Tool names are free-form, so any environment/database combination works — one entry per tool. Duplicate names, malformed JSON, or a missing file fail validation at startup. Set `MCP_SQL_TOOLS_FILE` to load the file from a different path (e.g. a mounted secret in Kubernetes).
 
 To give agents real understanding of a database, add a skill next to the demo one: create `.agents/skills/<your-db>/SKILL.md` describing the schema, relations, and conventions (use [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md) as the pattern), and list it in [AGENTS.md](AGENTS.md).
 
@@ -141,7 +142,7 @@ In the Inspector: select transport **Streamable HTTP**, set the URL to `http://l
 
 - **Sessions are in-memory** (map of `mcp-session-id` → transport). When running more than one replica, use sticky sessions at the ingress.
 - **`BASE_URL`** must be the public URL clients see (behind a proxy this differs from `localhost:<port>`); it is used in the resource metadata and `WWW-Authenticate` challenges.
-- **Read-only by default.** With `MCP_READ_ONLY=true` (the default) every query runs as a single statement inside a `READ ONLY` transaction, so the database itself rejects writes and DDL. On MySQL — where DDL escapes read-only transactions via implicit commit — statements are additionally restricted to a read allowlist (`SELECT`, `WITH`, `SHOW`, `DESCRIBE`, `EXPLAIN`). Set `MCP_READ_ONLY=false` to allow data modification.
+- **Read-only by default.** With `MCP_READ_ONLY=true` (the default) every query runs as a single statement inside a `READ ONLY` transaction, so the database itself rejects writes and DDL. On MySQL and MariaDB — where DDL escapes read-only transactions via implicit commit — statements are additionally restricted to a read allowlist (`SELECT`, `WITH`, `SHOW`, `DESCRIBE`, `EXPLAIN`). Set `MCP_READ_ONLY=false` to allow data modification.
 - With read-only mode disabled the SQL tools execute arbitrary SQL — the caller is fully trusted. Access control is entirely provider-side, so a token grant should be treated as a database access grant. Read-only database users are still the strongest guarantee.
 
 ## License

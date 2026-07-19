@@ -7,6 +7,7 @@ import { createLazyDataSource } from './database/lazy-data-source'
 import { MCP_TOOL_HANDLERS } from './mcp.constants'
 import { McpController } from './mcp.controller'
 import { McpServerService } from './mcp-server.service'
+import { MariadbToolHandler } from './tools/mariadb-tool.handler'
 import { MysqlToolHandler } from './tools/mysql-tool.handler'
 import { PostgresToolHandler } from './tools/postgres-tool.handler'
 import type { SqlToolHandler } from './tools/sql-tool.handler'
@@ -20,9 +21,9 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => {
     password: tool.password,
   }
 
-  if (tool.type === 'mysql') {
+  if (tool.type === 'mysql' || tool.type === 'mariadb') {
     return {
-      type: 'mysql',
+      type: tool.type,
       ...common,
       port: tool.port ?? 3306,
       ssl: tool.enableTLS ? { rejectUnauthorized: false } : undefined,
@@ -62,9 +63,14 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => {
             getDataSource: createLazyDataSource(toDataSourceOptions(tool)),
           }
 
-          return tool.type === 'mysql'
-            ? new MysqlToolHandler(options)
-            : new PostgresToolHandler(options)
+          switch (tool.type) {
+            case 'mysql':
+              return new MysqlToolHandler(options)
+            case 'mariadb':
+              return new MariadbToolHandler(options)
+            default:
+              return new PostgresToolHandler(options)
+          }
         })
       },
     },
