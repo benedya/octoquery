@@ -114,7 +114,23 @@ Databases are defined entirely in `mcp-sql-tools.json` (gitignored — it holds 
 ]
 ```
 
-Per entry: `name`, `host`, `database`, `user`, `password` are required; optional are `type` (`postgres`, the default, `mysql`, or `mariadb`), `label` (used in the tool title, defaults to the name), `description` (full tool-description override), `port` (defaults to the engine's standard port: 5432 for postgres, 3306 for mysql/mariadb), `enableTLS` (default true), and `maxRows` (default `MCP_MAX_ROWS`, 100). Tool names are free-form, so any environment/database combination works — one entry per tool. Duplicate names, malformed JSON, or a missing file fail validation at startup. Set `MCP_SQL_TOOLS_FILE` to load the file from a different path (e.g. a mounted secret in Kubernetes).
+Each entry becomes one MCP tool and accepts the following fields:
+
+| Field         | Required | Default                                    | Description                                                              |
+| ------------- | -------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| `name`        | yes      | —                                          | Tool name shown to the agent (letters, digits, `_`, `-`; max 64 chars)   |
+| `host`        | yes      | —                                          | Database host                                                            |
+| `database`    | yes      | —                                          | Database name                                                            |
+| `user`        | yes      | —                                          | Database user (prefer a read-only one)                                   |
+| `password`    | yes      | —                                          | Database password                                                        |
+| `type`        | no       | `postgres`                                 | Engine: `postgres`, `mysql`, or `mariadb`                                |
+| `port`        | no       | engine standard (5432 postgres, 3306 mysql/mariadb) | Database port                                                   |
+| `label`       | no       | the `name` value                           | Human-friendly name used in the tool title and description               |
+| `description` | no       | generated from `label`                     | Full override of the tool description shown to the agent                 |
+| `enableTLS`   | no       | `true`                                     | Connect over TLS                                                         |
+| `maxRows`     | no       | `MCP_MAX_ROWS` (100)                       | Row limit per query result for this tool                                 |
+
+Tool names are free-form, so any environment/database combination works (`sql_orders_prod`, `sql_analytics_dev`, ...) — one entry per tool. The file is validated at startup: duplicate names, malformed JSON, or a missing file stop the service with a clear error. Set `MCP_SQL_TOOLS_FILE` to load the file from a different path (e.g. a mounted secret in Kubernetes).
 
 To give agents real understanding of a database, add a skill next to the demo one: create `.agents/skills/<your-db>/SKILL.md` describing the schema, relations, and conventions (use [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md) as the pattern), and list it in [AGENTS.md](AGENTS.md).
 
