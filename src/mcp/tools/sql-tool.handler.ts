@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common'
-import type { DataSource } from 'typeorm'
+import type { DataSource, QueryRunner } from 'typeorm'
 import { z } from 'zod'
 import { isMultiStatement } from '../helpers/is-multi-statement'
 import { errorResponse, successResponse } from '../helpers/tool-response'
@@ -46,6 +46,29 @@ export abstract class SqlToolHandler implements McpToolHandlerInterface {
   // transaction on this engine; implementations that fully trust the
   // engine's transaction semantics may accept everything.
   protected abstract assertReadOnlyQueryAllowed(query: string): void
+
+  // Runs the query inside the engine's read-only transaction. The default
+  // uses START TRANSACTION READ ONLY, which PostgreSQL and MySQL/MariaDB
+  // support (MySQL rejects changing the characteristics of an already-open
+  // transaction, so the mode has to be part of the statement that starts
+  // it). Engines without read-only transactions override the whole method.
+  protected async runReadOnlyTransaction(
+    queryRunner: QueryRunner,
+    query: string,
+  ): Promise<unknown> {
+    await queryRunner.query('START TRANSACTION READ ONLY')
+
+    try {
+      const result: unknown = await queryRunner.query(query)
+      await queryRunner.query('COMMIT')
+
+      return result
+    } catch (error) {
+      await queryRunner.query('ROLLBACK').catch(() => undefined)
+
+      throw error
+    }
+  }
 
   async execute(params: unknown): Promise<McpToolResponse> {
     const query =
@@ -109,21 +132,8 @@ export abstract class SqlToolHandler implements McpToolHandlerInterface {
 
     try {
       await queryRunner.connect()
-      // Supported by both PostgreSQL and MySQL. MySQL rejects changing the
-      // characteristics of an already-open transaction, so the mode has to be
-      // part of the statement that starts it.
-      await queryRunner.query('START TRANSACTION READ ONLY')
 
-      try {
-        const result: unknown = await queryRunner.query(query)
-        await queryRunner.query('COMMIT')
-
-        return result
-      } catch (error) {
-        await queryRunner.query('ROLLBACK').catch(() => undefined)
-
-        throw error
-      }
+      return await this.runReadOnlyTransaction(queryRunner, query)
     } finally {
       await queryRunner.release()
     }

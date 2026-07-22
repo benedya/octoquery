@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help run r dev build test lint lint-fix mcp-inspector i demo-up demo-down demo-psql demo-mysql demo-mariadb
+.PHONY: help run r dev build test lint lint-fix mcp-inspector i demo-up demo-down demo-psql demo-mysql demo-mariadb demo-mssql
 SHELL := /bin/bash
 
 COLOR_OFF=\033[0m
@@ -49,3 +49,6 @@ demo-mysql: ## Open a mysql shell into the demo blog database (MySQL)
 
 demo-mariadb: ## Open a mariadb shell into the demo library database (MariaDB)
 	docker exec -it octoquery-demo-mariadb mariadb -uoctoquery -poctoquery library
+
+demo-mssql: ## Open a sqlcmd shell into the demo helpdesk database (SQL Server)
+	docker exec -it octoquery-demo-mssql /opt/mssql-tools18/bin/sqlcmd -S localhost -U octoquery -P 'OctoQuery1!' -C -d helpdesk

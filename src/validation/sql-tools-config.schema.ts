@@ -11,13 +11,13 @@ export const sqlToolConfigSchema = z.object({
       /^[a-zA-Z0-9_-]{1,64}$/,
       'Tool name must contain only letters, digits, "_" or "-" (max 64 chars)',
     ),
-  type: z.enum(['postgres', 'mysql', 'mariadb']).default('postgres'),
+  type: z.enum(['postgres', 'mysql', 'mariadb', 'mssql']).default('postgres'),
   label: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
   maxRows: z.number().int().positive().optional(),
   host: z.string().min(1),
   // Defaults to the engine's standard port (5432 for postgres, 3306 for
-  // mysql/mariadb).
+  // mysql/mariadb, 1433 for mssql).
   port: z.number().int().positive().optional(),
   database: z.string().min(1),
   user: z.string().min(1),

@@ -11,17 +11,18 @@ AI agents are great at writing SQL, but they need two things to be useful with *
 
 ![How OctoQuery works](docs/how-it-works.png)
 
-This repo ships working examples of both: three demo databases ([demo/](demo/docker-compose.yml) — an e-commerce PostgreSQL, a blog MySQL, and a library MariaDB) with their matching skills ([ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md), [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md), [library-demo-db](.agents/skills/library-demo-db/SKILL.md)), wired together through [AGENTS.md](AGENTS.md). Use them as the template for your own databases.
+This repo ships working examples of both: four demo databases ([demo/](demo/docker-compose.yml) — one per supported engine) with their matching skills ([ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md), [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md), [library-demo-db](.agents/skills/library-demo-db/SKILL.md), [helpdesk-demo-db](.agents/skills/helpdesk-demo-db/SKILL.md)), wired together through [AGENTS.md](AGENTS.md). Use them as the template for your own databases.
 
 Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`, protected by OAuth 2.0 (optional for local use). Connections are opened lazily on first query, so databases don't need to be reachable at startup.
 
 ## Supported databases
 
-| Database   | Status       |
-| ---------- | ------------ |
-| PostgreSQL | ✅ Supported |
-| MySQL      | ✅ Supported |
-| MariaDB    | ✅ Supported |
+| Database              | Status       |
+| --------------------- | ------------ |
+| PostgreSQL            | ✅ Supported |
+| MySQL                 | ✅ Supported |
+| MariaDB               | ✅ Supported |
+| SQL Server (MSSQL)    | ✅ Supported |
 
 More engines may be added over time — contributions are welcome.
 
@@ -31,7 +32,7 @@ From clone to asking your data questions in three steps: **run the server** (bac
 
 ### Step 1 — Run the server with the demo databases
 
-Three seeded demo databases run in Docker: an e-commerce PostgreSQL (users, products, orders, order items), a blog MySQL (authors, posts, comments), and a library MariaDB (books, members, loans).
+Four seeded demo databases run in Docker — one per supported engine: an e-commerce PostgreSQL (users, products, orders, order items), a blog MySQL (authors, posts, comments), a library MariaDB (books, members, loans), and a helpdesk SQL Server (customers, agents, tickets).
 
 1. Clone the repository:
 
@@ -45,7 +46,7 @@ git clone https://github.com/benedya/octoquery.git && cd octoquery
 npm install
 ```
 
-3. Start the demo databases (PostgreSQL on `127.0.0.1:45432`, MySQL on `127.0.0.1:43306`, MariaDB on `127.0.0.1:43307`, all seeded automatically):
+3. Start the demo databases (PostgreSQL on `127.0.0.1:45432`, MySQL on `127.0.0.1:43306`, MariaDB on `127.0.0.1:43307`, SQL Server on `127.0.0.1:41433`, all seeded automatically):
 
 ```bash
 docker compose -f demo/docker-compose.yml up -d
@@ -63,7 +64,7 @@ cp .env.example .env && cp mcp-sql-tools.example.json mcp-sql-tools.json
 npm run start:dev
 ```
 
-The MCP endpoint is now live at `http://localhost:3000/mcp` with three tools: `sql_ecommerce_demo`, `sql_blog_demo`, and `sql_library_demo`.
+The MCP endpoint is now live at `http://localhost:3000/mcp` with four tools: `sql_ecommerce_demo`, `sql_blog_demo`, `sql_library_demo`, and `sql_helpdesk_demo`.
 
 
 ### Step 2 — Connect your AI agent
@@ -94,6 +95,7 @@ Everything here works out of the box with this repository's stock configuration:
 | *"Who are our top 5 customers by total spend?"*      | `sql_ecommerce_demo` (PostgreSQL) | [ecommerce-demo-db](.agents/skills/ecommerce-demo-db/SKILL.md)   |
 | *"Which blog post got the most comments?"*           | `sql_blog_demo` (MySQL)           | [blog-demo-db](.agents/skills/blog-demo-db/SKILL.md)             |
 | *"Who has overdue library books, and which titles?"* | `sql_library_demo` (MariaDB)      | [library-demo-db](.agents/skills/library-demo-db/SKILL.md)       |
+| *"Which urgent tickets are still unassigned?"*       | `sql_helpdesk_demo` (SQL Server)  | [helpdesk-demo-db](.agents/skills/helpdesk-demo-db/SKILL.md)     |
 
 ## Adding your own databases
 
@@ -123,8 +125,8 @@ Each entry becomes one MCP tool and accepts the following fields:
 | `database`    | yes      | —                                          | Database name                                                            |
 | `user`        | yes      | —                                          | Database user (prefer a read-only one)                                   |
 | `password`    | yes      | —                                          | Database password                                                        |
-| `type`        | no       | `postgres`                                 | Engine: `postgres`, `mysql`, or `mariadb`                                |
-| `port`        | no       | engine standard (5432 postgres, 3306 mysql/mariadb) | Database port                                                   |
+| `type`        | no       | `postgres`                                 | Engine: `postgres`, `mysql`, `mariadb`, or `mssql`                       |
+| `port`        | no       | engine standard (5432 postgres, 3306 mysql/mariadb, 1433 mssql) | Database port                                       |
 | `label`       | no       | the `name` value                           | Human-friendly name used in the tool title and description               |
 | `description` | no       | generated from `label`                     | Full override of the tool description shown to the agent                 |
 | `enableTLS`   | no       | `true`                                     | Connect over TLS                                                         |
@@ -169,7 +171,7 @@ In the Inspector: select transport **Streamable HTTP**, set the URL to `http://l
 
 - **Sessions are in-memory** (map of `mcp-session-id` → transport). When running more than one replica, use sticky sessions at the ingress.
 - **`BASE_URL`** must be the public URL clients see (behind a proxy this differs from `localhost:<port>`); it is used in the resource metadata and `WWW-Authenticate` challenges.
-- **Read-only by default.** With `MCP_READ_ONLY=true` (the default) every query runs as a single statement inside a `READ ONLY` transaction, so the database itself rejects writes and DDL. On MySQL and MariaDB — where DDL escapes read-only transactions via implicit commit — statements are additionally restricted to a read allowlist (`SELECT`, `WITH`, `SHOW`, `DESCRIBE`, `EXPLAIN`). Set `MCP_READ_ONLY=false` to allow data modification.
+- **Read-only by default.** With `MCP_READ_ONLY=true` (the default) every query runs as a single statement inside a `READ ONLY` transaction, so the database itself rejects writes and DDL. On MySQL and MariaDB — where DDL escapes read-only transactions via implicit commit — statements are additionally restricted to a read allowlist (`SELECT`, `WITH`, `SHOW`, `DESCRIBE`, `EXPLAIN`). SQL Server has no read-only transaction mode, so there statements are restricted to `SELECT`/`WITH` without data-modifying keywords and run inside a transaction that is always rolled back. Set `MCP_READ_ONLY=false` to allow data modification.
 - With read-only mode disabled the SQL tools execute arbitrary SQL — the caller is fully trusted. Access control is entirely provider-side, so a token grant should be treated as a database access grant. Read-only database users are still the strongest guarantee.
 
 ## License

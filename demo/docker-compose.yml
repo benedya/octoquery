@@ -51,3 +51,29 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+
+  # The SQL Server image is amd64-only (runs under emulation on ARM hosts) and
+  # has no init-script mechanism, so the command starts the server, waits for
+  # it, and applies the init scripts itself. The healthcheck targets the
+  # helpdesk database, so the service turns healthy only after seeding.
+  demo-mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: octoquery-demo-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "OctoQuery1!"
+    ports:
+      - "41433:1433"
+    volumes:
+      - ./init-mssql:/init:ro
+    command: >
+      /bin/bash -c "/opt/mssql/bin/sqlservr &
+      until /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b >/dev/null 2>&1; do sleep 2; done;
+      /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -i /init/01_schema.sql -i /init/02_seed.sql;
+      wait"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -d helpdesk -Q 'SELECT 1' -b"]
+      interval: 5s
+      timeout: 5s
+      retries: 40

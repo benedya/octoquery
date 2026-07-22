@@ -8,6 +8,7 @@ import { MCP_TOOL_HANDLERS } from './mcp.constants'
 import { McpController } from './mcp.controller'
 import { McpServerService } from './mcp-server.service'
 import { MariadbToolHandler } from './tools/mariadb-tool.handler'
+import { MssqlToolHandler } from './tools/mssql-tool.handler'
 import { MysqlToolHandler } from './tools/mysql-tool.handler'
 import { PostgresToolHandler } from './tools/postgres-tool.handler'
 import type { SqlToolHandler } from './tools/sql-tool.handler'
@@ -27,6 +28,18 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => {
       ...common,
       port: tool.port ?? 3306,
       ssl: tool.enableTLS ? { rejectUnauthorized: false } : undefined,
+    }
+  }
+
+  if (tool.type === 'mssql') {
+    return {
+      type: 'mssql',
+      ...common,
+      port: tool.port ?? 1433,
+      options: {
+        encrypt: tool.enableTLS,
+        trustServerCertificate: true,
+      },
     }
   }
 
@@ -68,6 +81,8 @@ const toDataSourceOptions = (tool: SqlToolConfig): DataSourceOptions => {
               return new MysqlToolHandler(options)
             case 'mariadb':
               return new MariadbToolHandler(options)
+            case 'mssql':
+              return new MssqlToolHandler(options)
             default:
               return new PostgresToolHandler(options)
           }

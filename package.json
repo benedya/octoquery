@@ -16,6 +16,7 @@
     "test:postgres": "jest mcp-postgres",
     "test:mysql": "jest mcp-mysql",
     "test:mariadb": "jest mcp-mariadb",
+    "test:mssql": "jest mcp-mssql",
     "lint": "biome check && tsc --noEmit",
     "lint:fix": "biome check --write",
     "prepare": "husky"
@@ -28,6 +29,7 @@
     "@nestjs/platform-express": "^11.1.24",
     "dotenv": "^17.2.0",
     "jose": "^6.0.0",
+    "mssql": "^12.7.0",
     "mysql2": "^3.23.0",
     "nestjs-pino": "^4.6.1",
     "pg": "^8.21.0",
@@ -43,6 +45,7 @@
     "@nestjs/schematics": "^11.1.0",
     "@nestjs/testing": "^11.1.28",
     "@testcontainers/mariadb": "^12.0.4",
+    "@testcontainers/mssqlserver": "^12.0.4",
     "@testcontainers/mysql": "^12.0.4",
     "@testcontainers/postgresql": "^12.0.4",
     "@tsconfig/node24": "^24.0.4",

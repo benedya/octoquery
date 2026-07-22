@@ -33,5 +33,17 @@
     "user": "octoquery",
     "password": "octoquery",
     "enableTLS": false
+  },
+  {
+    "name": "sql_helpdesk_demo",
+    "type": "mssql",
+    "label": "demo helpdesk",
+    "description": "Demo helpdesk database (customers, agents, tickets). Started via demo/docker-compose.yml.",
+    "host": "127.0.0.1",
+    "port": 41433,
+    "database": "helpdesk",
+    "user": "octoquery",
+    "password": "OctoQuery1!",
+    "enableTLS": false
   }
 ]
