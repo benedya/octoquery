@@ -15,6 +15,19 @@ This repo ships working examples of both: four demo databases ([demo/](demo/dock
 
 Under the hood it's a NestJS service speaking MCP over Streamable HTTP at `/mcp`, protected by OAuth 2.0 (optional for local use). Connections are opened lazily on first query, so databases don't need to be reachable at startup.
 
+### Use with care
+
+> [!WARNING]
+> **OctoQuery gives an AI agent a live connection to your database.** We've done our best to make that safe — queries run read-only by default (single statement, inside a `READ ONLY` transaction) — but **no safeguard replaces your own caution**:
+>
+> - **Use a read-only database user.** This is the only guarantee that doesn't depend on OctoQuery's own logic. The service's read-only mode is a second line of defense, not the first.
+> - **Point it at the least data you can.** Prefer a replica, a restricted schema, or a scrubbed copy over your production primary. Grant the user access only to the tables the agent actually needs.
+> - **The agent sees whatever it queries.** Any data it can read — including personal data, secrets stored in tables, and internal business data — can end up in the model's context and in the transcript of your MCP client.
+> - **`MCP_READ_ONLY=false` removes the protection entirely.** With it disabled, the tools execute arbitrary SQL, including `UPDATE`, `DELETE`, and DDL. Only do this against databases you're prepared to have modified.
+> - **A token is a database grant.** With auth enabled, anyone holding a valid access token can query every configured database. Treat those tokens like database credentials.
+>
+> Review the queries your agent runs, start against the demo databases below, and roll out to real data only once you're comfortable with what it does.
+
 ## Supported databases
 
 | Database              | Status       |
